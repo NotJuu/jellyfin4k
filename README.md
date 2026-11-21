@@ -66,14 +66,35 @@ der neuen Stelle neu; ist FFmpeg weit genug voraus, wird es pausiert (Linux/macO
 
 ## Installation
 
-1. Die passende ZIP aus den [Releases](../../releases) bzw. den Build-Artefakten herunterladen:
+### Über die Repository-URL (empfohlen, mit automatischen Updates)
+
+1. Jellyfin-Dashboard → **Plugins** → **Repositories** (bzw. *Kataloge* → Zahnrad) → **+**
+2. Name: `Anime4K`, URL:
+
+   ```
+   https://github.com/NotJuu/jellyfin4k/releases/latest/download/manifest.json
+   ```
+
+3. Speichern, dann unter **Katalog** das Plugin **Anime4K** auswählen und installieren.
+4. Jellyfin neu starten und im Browser die Jellyfin-Seite neu laden (Strg+F5).
+
+Jellyfin wählt automatisch den passenden Build (Jellyfin 12.x oder 10.11).
+
+### Manuell
+
+1. Die passende ZIP aus den [Releases](../../releases) herunterladen:
    - `anime4k-jellyfin-12.zip` für Jellyfin 12.x
    - `anime4k-jellyfin-10.11.zip` für Jellyfin 10.11
 2. Im Jellyfin-Datenverzeichnis einen Ordner `plugins/Anime4K` anlegen und `Jellyfin.Plugin.Anime4K.dll` hineinkopieren
    (z. B. `/var/lib/jellyfin/plugins/Anime4K/`, Docker: `/config/plugins/Anime4K/`,
    Windows: `%ProgramData%\Jellyfin\Server\plugins\Anime4K\`).
-3. Jellyfin neu starten.
-4. Im Browser die Jellyfin-Seite einmal neu laden (Strg+F5), damit der Player-Button geladen wird.
+3. Jellyfin neu starten und die Jellyfin-Seite im Browser neu laden.
+
+### Neue Version veröffentlichen
+
+Einen Tag `vX.Y.Z` auf `main` pushen (oder auf GitHub ein Release mit diesem Tag anlegen). Der Workflow
+baut beide Varianten, erstellt das Release mit den ZIP-Dateien und der `manifest.json` – die Repository-URL
+oben zeigt danach automatisch auf die neue Version.
 
 Selbst bauen (benötigt das .NET 10 SDK):
 

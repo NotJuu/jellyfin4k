@@ -16,12 +16,18 @@ jobs:
     strategy:
       matrix:
         include:
+          # the last part of the plugin version tells Jellyfin which build fits:
+          # x.y.z.12 -> Jellyfin 12.x, x.y.z.11 -> Jellyfin 10.11
           - jellyfin: "12.4.0"
             framework: "net10.0"
             label: "jellyfin-12"
+            abi: "12.0.0.0"
+            suffix: "12"
           - jellyfin: "10.11.11"
             framework: "net9.0"
             label: "jellyfin-10.11"
+            abi: "10.11.0.0"
+            suffix: "11"
     steps:
       - uses: actions/checkout@v4
 
@@ -31,11 +37,25 @@ jobs:
             9.0.x
             10.0.x
 
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            base="${GITHUB_REF#refs/tags/v}"
+          else
+            base="0.0.0"
+          fi
+          echo "version=${base}.${{ matrix.suffix }}" >> "$GITHUB_OUTPUT"
+
       - name: Build
         working-directory: Jellyfin.Plugin.Anime4K
         run: |
+          V=${{ steps.version.outputs.version }}
           dotnet restore -p:JellyfinVersion=${{ matrix.jellyfin }} -p:TargetFramework=${{ matrix.framework }}
-          dotnet build --no-restore -c Release -p:JellyfinVersion=${{ matrix.jellyfin }} -p:TargetFramework=${{ matrix.framework }} -o ../artifacts/${{ matrix.label }}
+          dotnet build --no-restore -c Release \
+            -p:JellyfinVersion=${{ matrix.jellyfin }} -p:TargetFramework=${{ matrix.framework }} \
+            -p:AssemblyVersion=$V -p:FileVersion=$V -p:Version=$V \
+            -o ../artifacts/${{ matrix.label }}
 
       - name: Check client script syntax
         run: node --check Jellyfin.Plugin.Anime4K/Web/anime4k.js
@@ -44,15 +64,68 @@ jobs:
         run: |
           cd artifacts/${{ matrix.label }}
           zip -j ../anime4k-${{ matrix.label }}.zip Jellyfin.Plugin.Anime4K.dll
-          md5sum ../anime4k-${{ matrix.label }}.zip
+          cd ..
+          cat > version-${{ matrix.label }}.json <<EOF
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "targetAbi": "${{ matrix.abi }}",
+            "file": "anime4k-${{ matrix.label }}.zip",
+            "checksum": "$(md5sum anime4k-${{ matrix.label }}.zip | cut -d' ' -f1)"
+          }
+          EOF
 
       - uses: actions/upload-artifact@v4
         with:
           name: anime4k-${{ matrix.label }}
-          path: artifacts/anime4k-${{ matrix.label }}.zip
+          path: |
+            artifacts/anime4k-${{ matrix.label }}.zip
+            artifacts/version-${{ matrix.label }}.json
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create Jellyfin repository manifest
+        run: |
+          python3 - <<'EOF'
+          import glob, json, os, datetime
+          repo = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+          versions = []
+          for f in sorted(glob.glob("dist/version-*.json")):
+              v = json.load(open(f))
+              versions.append({
+                  "version": v["version"],
+                  "changelog": f"Release {tag}",
+                  "targetAbi": v["targetAbi"],
+                  "sourceUrl": f"https://github.com/{repo}/releases/download/{tag}/{v['file']}",
+                  "checksum": v["checksum"],
+                  "timestamp": now,
+              })
+          versions.sort(key=lambda x: [int(p) for p in x["version"].split(".")], reverse=True)
+          manifest = [{
+              "guid": "2c1076de-f14e-4f3b-9f09-55168a31d9fe",
+              "name": "Anime4K",
+              "overview": "Anime4K-Upscaling im Player – im Browser oder auf dem Server für Fernseher",
+              "description": "Echtzeit-Anime-Upscaling mit Anime4K. Im Webplayer per WebGL2 auf der GPU des Geräts oder auf dem Server mit FFmpeg/libplacebo, damit Fernseher fertig hochgerechnetes Video (bis 4K) erhalten. Menü im Player, mit der TV-Fernbedienung bedienbar.",
+              "owner": repo.split("/")[0],
+              "category": "General",
+              "versions": versions,
+          }]
+          json.dump(manifest, open("dist/manifest.json", "w"), indent=2)
+          print(open("dist/manifest.json").read())
+          EOF
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/anime4k-${{ matrix.label }}.zip
+          files: |
+            dist/anime4k-*.zip
+            dist/manifest.json
