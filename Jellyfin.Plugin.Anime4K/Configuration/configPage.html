@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Anime4K</title>
+</head>
+<body>
+<div id="Anime4KConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <style>
+                #Anime4KConfigPage .a4k-section { margin: 2em 0 1em; }
+                #Anime4KConfigPage table.a4k-devices { width: 100%; border-collapse: collapse; }
+                #Anime4KConfigPage table.a4k-devices th, #Anime4KConfigPage table.a4k-devices td { text-align: left; padding: .5em .4em; border-bottom: 1px solid rgba(128,128,128,.25); vertical-align: middle; }
+                #Anime4KConfigPage table.a4k-devices select { background: transparent; color: inherit; border: 1px solid rgba(128,128,128,.5); border-radius: .2em; padding: .3em; }
+                #Anime4KConfigPage table.a4k-devices option { color: #000; }
+                #Anime4KConfigPage .a4k-sub { opacity: .65; font-size: .85em; }
+                #Anime4KConfigPage pre.a4k-log { white-space: pre-wrap; word-break: break-all; max-height: 22em; overflow: auto; background: rgba(0,0,0,.3); padding: 1em; border-radius: .3em; font-size: .8em; }
+                #Anime4KConfigPage .a4k-ok { color: #4caf50; font-weight: bold; }
+                #Anime4KConfigPage .a4k-err { color: #f44336; font-weight: bold; }
+            </style>
+
+            <form id="Anime4KConfigForm">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Anime4K</h2>
+                    <p>
+                        Anime4K rechnet Animes in Echtzeit hoch. Im Webplayer gibt es dafür einen neuen Button
+                        (<span class="material-icons" style="vertical-align:middle;font-size:1.2em">auto_awesome</span>)
+                        bzw. die <b>rote</b> Taste der Fernbedienung. Fernseher, deren Grafikleistung nicht ausreicht,
+                        können das Hochrechnen vom <b>Server</b> erledigen lassen – der Fernseher erhält dann direkt das
+                        fertig hochgerechnete Video (z. B. in 4K).
+                    </p>
+                </div>
+
+                <div class="a4k-section">
+                    <h3 class="sectionTitle">Allgemein</h3>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label><input is="emby-checkbox" type="checkbox" id="InjectClientScript" /><span>Anime4K-Steuerung in den Webplayer einbauen</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Fügt den Anime4K-Button und das Menü in den Jellyfin-Webclient (Browser, LG webOS, Desktop-App) ein. Nach Änderungen die Seite neu laden.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label><input is="emby-checkbox" type="checkbox" id="EnableServerUpscaling" /><span>Server-Upscaling aktivieren</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Der Server rechnet das Video mit FFmpeg/libplacebo und Anime4K hoch (benötigt eine Vulkan-fähige GPU im Server).</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label><input is="emby-checkbox" type="checkbox" id="AllowUsersServerUpscaling" /><span>Benutzer dürfen Server-Upscaling im Player einschalten</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Wenn deaktiviert, können nur Administratoren Geräte für Server-Upscaling freischalten.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label><input is="emby-checkbox" type="checkbox" id="OnlyAnime" /><span>Server-Upscaling nur für Animes</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Nur Titel mit Genre „Anime“/„Animation“ oder „anime“ im Pfad werden auf dem Server hochgerechnet.</div>
+                    </div>
+                </div>
+
+                <div class="a4k-section">
+                    <h3 class="sectionTitle">Standardwerte</h3>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="DefaultMode" label="Modus">
+                            <option value="A">A – unscharfe Quellen (die meisten 1080p-Animes)</option>
+                            <option value="B">B – leicht unscharf, mehr Artefakte</option>
+                            <option value="C">C – scharfe Quellen</option>
+                            <option value="AA">A+A</option>
+                            <option value="BB">B+B</option>
+                            <option value="CA">C+A</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="DefaultQuality" label="Qualität">
+                            <option value="Fast">Schnell (M/S)</option>
+                            <option value="HQ">Hohe Qualität (VL/M)</option>
+                            <option value="Ultra">Ultra (UL/L)</option>
+                        </select>
+                    </div>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="DefaultTargetHeight" label="Ausgabeauflösung (Server)">
+                            <option value="1080">1080p</option>
+                            <option value="1440">1440p</option>
+                            <option value="2160">2160p (4K)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="a4k-section">
+                    <h3 class="sectionTitle">Server-Upscaling pro Gerät</h3>
+                    <p class="fieldDescription">Hier lassen sich auch Geräte freischalten, auf denen das Anime4K-Menü nicht verfügbar ist
+                        (z. B. Android TV, Samsung Tizen, Kodi, Infuse). Jede Wiedergabe auf einem aktivierten Gerät wird vom Server mit Anime4K hochgerechnet.</p>
+                    <div id="a4kDevices">Lade Geräte …</div>
+                </div>
+
+                <div class="a4k-section">
+                    <h3 class="sectionTitle">Encoder</h3>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="FfmpegPath" label="FFmpeg-Pfad (leer = Jellyfin-FFmpeg)" />
+                        <div class="fieldDescription">Benötigt FFmpeg mit libplacebo und Vulkan (jellyfin-ffmpeg 6 oder neuer erfüllt das).</div>
+                    </div>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="Encoder" label="Video-Encoder">
+                            <option value="auto">Automatisch (nach Jellyfin-Hardwarebeschleunigung)</option>
+                            <option value="libx264">H.264 – Software (libx264)</option>
+                            <option value="libx265">HEVC – Software (libx265)</option>
+                            <option value="h264_nvenc">H.264 – NVIDIA NVENC</option>
+                            <option value="hevc_nvenc">HEVC – NVIDIA NVENC</option>
+                            <option value="h264_qsv">H.264 – Intel Quick Sync</option>
+                            <option value="hevc_qsv">HEVC – Intel Quick Sync</option>
+                            <option value="h264_vaapi">H.264 – VAAPI (Intel/AMD, Linux)</option>
+                            <option value="hevc_vaapi">HEVC – VAAPI (Intel/AMD, Linux)</option>
+                            <option value="h264_amf">H.264 – AMD AMF (Windows)</option>
+                            <option value="hevc_amf">HEVC – AMD AMF (Windows)</option>
+                            <option value="h264_videotoolbox">H.264 – Apple VideoToolbox</option>
+                            <option value="hevc_videotoolbox">HEVC – Apple VideoToolbox</option>
+                        </select>
+                        <div class="fieldDescription">Für 4K-Ausgabe in Echtzeit wird ein Hardware-Encoder dringend empfohlen. HEVC ist effizienter, wird aber nicht von jedem Browser unterstützt.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="VideoQuality" min="0" max="51" label="Qualität (CRF/CQ/QP, niedriger = besser)" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="MaxBitrateMbps" min="0" max="400" label="Maximale Bitrate in Mbit/s (0 = unbegrenzt)" />
+                    </div>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="EncoderPreset" label="Preset (nur libx264/libx265)">
+                            <option value="ultrafast">ultrafast</option>
+                            <option value="superfast">superfast</option>
+                            <option value="veryfast">veryfast</option>
+                            <option value="faster">faster</option>
+                            <option value="fast">fast</option>
+                            <option value="medium">medium</option>
+                        </select>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="SegmentLength" min="1" max="20" label="HLS-Segmentlänge (Sekunden)" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="AudioBitrate" min="64" max="640" label="Audio-Bitrate (kbit/s, AAC)" />
+                    </div>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="AudioChannels" label="Audiokanäle">
+                            <option value="2">Stereo</option>
+                            <option value="6">5.1</option>
+                        </select>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="VulkanDevice" label="Vulkan-Gerät (leer = automatisch)" />
+                        <div class="fieldDescription">Index (z. B. <code>0</code>) oder Name der GPU, die libplacebo verwenden soll. Bei mehreren GPUs oder wenn „Found no suitable device“ im Test erscheint, hier <code>0</code> eintragen.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="VaapiDevice" label="VAAPI-Gerät (leer = Jellyfin-Einstellung)" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="MaxConcurrentJobs" min="1" max="16" label="Maximale gleichzeitige Anime4K-Streams" />
+                    </div>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Speichern</span></button>
+                </div>
+            </form>
+
+            <div class="a4k-section">
+                <h3 class="sectionTitle">Diagnose</h3>
+                <button is="emby-button" type="button" id="a4kTest" class="raised emby-button"><span>Server-Upscaling testen</span></button>
+                <button is="emby-button" type="button" id="a4kStatus" class="raised emby-button"><span>Laufende Streams anzeigen</span></button>
+                <div id="a4kTestResult" style="margin-top:1em"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = '2c1076de-f14e-4f3b-9f09-55168a31d9fe';
+            var page = document.querySelector('#Anime4KConfigPage');
+            var config = null;
+            var devices = [];
+            var checkboxes = ['InjectClientScript', 'EnableServerUpscaling', 'AllowUsersServerUpscaling', 'OnlyAnime'];
+            var texts = ['FfmpegPath', 'Encoder', 'EncoderPreset', 'VulkanDevice', 'VaapiDevice', 'DefaultMode', 'DefaultQuality'];
+            var numbers = ['VideoQuality', 'MaxBitrateMbps', 'SegmentLength', 'AudioBitrate', 'AudioChannels', 'MaxConcurrentJobs', 'DefaultTargetHeight'];
+
+            function el(id) {
+                return page.querySelector('#' + id);
+            }
+
+            function escapeHtml(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            function options(list, selected) {
+                return list.map(function (o) {
+                    return '<option value="' + o[0] + '"' + (String(o[0]) === String(selected) ? ' selected' : '') + '>' + o[1] + '</option>';
+                }).join('');
+            }
+
+            function findDevice(id) {
+                return (config.Devices || []).filter(function (d) { return d.DeviceId === id; })[0];
+            }
+
+            function renderDevices() {
+                var modes = [['A', 'A'], ['B', 'B'], ['C', 'C'], ['AA', 'A+A'], ['BB', 'B+B'], ['CA', 'C+A']];
+                var qualities = [['Fast', 'Schnell'], ['HQ', 'HQ'], ['Ultra', 'Ultra']];
+                var heights = [[1080, '1080p'], [1440, '1440p'], [2160, '2160p']];
+                var known = {};
+                var rows = devices.map(function (d) {
+                    known[d.Id] = true;
+                    return { id: d.Id, name: d.Name, app: d.AppName + (d.AppVersion ? ' ' + d.AppVersion : ''), user: d.LastUserName, setting: findDevice(d.Id) };
+                });
+                (config.Devices || []).forEach(function (s) {
+                    if (!known[s.DeviceId]) {
+                        rows.push({ id: s.DeviceId, name: s.DeviceName || s.DeviceId, app: s.AppName, user: '', setting: s });
+                    }
+                });
+                if (!rows.length) {
+                    el('a4kDevices').innerHTML = '<p>Keine Geräte gefunden.</p>';
+                    return;
+                }
+                var html = '<table class="a4k-devices"><thead><tr><th>Server-Upscaling</th><th>Gerät</th><th>Modus</th><th>Qualität</th><th>Auflösung</th></tr></thead><tbody>';
+                rows.forEach(function (r) {
+                    var s = r.setting || { ServerUpscaling: false, Mode: config.DefaultMode, Quality: config.DefaultQuality, TargetHeight: config.DefaultTargetHeight };
+                    html += '<tr data-device="' + escapeHtml(r.id) + '" data-name="' + escapeHtml(r.name) + '" data-app="' + escapeHtml(r.app) + '">'
+                        + '<td><label class="checkboxContainer" style="margin:0"><input type="checkbox" is="emby-checkbox" class="a4k-dev-enabled"' + (s.ServerUpscaling ? ' checked' : '') + '/><span></span></label></td>'
+                        + '<td><div>' + escapeHtml(r.name) + '</div><div class="a4k-sub">' + escapeHtml(r.app) + (r.user ? ' · ' + escapeHtml(r.user) : '') + '</div></td>'
+                        + '<td><select class="a4k-dev-mode">' + options(modes, s.Mode) + '</select></td>'
+                        + '<td><select class="a4k-dev-quality">' + options(qualities, s.Quality) + '</select></td>'
+                        + '<td><select class="a4k-dev-height">' + options(heights, s.TargetHeight) + '</select></td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table>';
+                el('a4kDevices').innerHTML = html;
+            }
+
+            function collectDevices() {
+                var list = [];
+                var seen = {};
+                page.querySelectorAll('tr[data-device]').forEach(function (tr) {
+                    var id = tr.getAttribute('data-device');
+                    seen[id] = true;
+                    var enabled = tr.querySelector('.a4k-dev-enabled').checked;
+                    var existing = findDevice(id);
+                    var mode = tr.querySelector('.a4k-dev-mode').value;
+                    var quality = tr.querySelector('.a4k-dev-quality').value;
+                    var height = parseInt(tr.querySelector('.a4k-dev-height').value, 10);
+                    // only store devices that are enabled or were configured before
+                    if (enabled || existing) {
+                        list.push({
+                            DeviceId: id,
+                            DeviceName: tr.getAttribute('data-name') || '',
+                            AppName: tr.getAttribute('data-app') || '',
+                            ServerUpscaling: enabled,
+                            Mode: mode,
+                            Quality: quality,
+                            TargetHeight: height
+                        });
+                    }
+                });
+                (config.Devices || []).forEach(function (d) {
+                    if (!seen[d.DeviceId]) {
+                        list.push(d);
+                    }
+                });
+                return list;
+            }
+
+            function load() {
+                Dashboard.showLoadingMsg();
+                Promise.all([
+                    ApiClient.getPluginConfiguration(pluginId),
+                    ApiClient.getJSON(ApiClient.getUrl('Devices')).catch(function () { return { Items: [] }; })
+                ]).then(function (results) {
+                    config = results[0];
+                    devices = (results[1] && results[1].Items) || [];
+                    checkboxes.forEach(function (k) { el(k).checked = !!config[k]; });
+                    texts.forEach(function (k) { el(k).value = config[k] == null ? '' : config[k]; });
+                    numbers.forEach(function (k) { el(k).value = config[k]; });
+                    renderDevices();
+                    Dashboard.hideLoadingMsg();
+                });
+            }
+
+            page.addEventListener('pageshow', load);
+
+            page.querySelector('#Anime4KConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (current) {
+                    config = current;
+                    checkboxes.forEach(function (k) { current[k] = el(k).checked; });
+                    texts.forEach(function (k) { current[k] = el(k).value; });
+                    numbers.forEach(function (k) { current[k] = parseInt(el(k).value, 10) || 0; });
+                    current.Devices = collectDevices();
+                    return ApiClient.updatePluginConfiguration(pluginId, current);
+                }).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                    load();
+                });
+                return false;
+            });
+
+            page.querySelector('#a4kTest').addEventListener('click', function () {
+                var out = el('a4kTestResult');
+                out.innerHTML = 'Test läuft (libplacebo + Anime4K + Encoder) …';
+                ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('Anime4K/Test'), dataType: 'json' }).then(function (r) {
+                    out.innerHTML = '<p class="' + (r.Success ? 'a4k-ok' : 'a4k-err') + '">'
+                        + (r.Success ? 'Erfolgreich' : 'Fehlgeschlagen') + ' – Encoder: ' + escapeHtml(r.Encoder)
+                        + (r.Seconds != null ? ' – ' + r.Seconds + ' s' : '') + '</p><pre class="a4k-log">' + escapeHtml(r.Output) + '</pre>';
+                }, function (err) {
+                    out.innerHTML = '<p class="a4k-err">Fehler: ' + escapeHtml(err && err.status) + '</p>';
+                });
+            });
+
+            page.querySelector('#a4kStatus').addEventListener('click', function () {
+                var out = el('a4kTestResult');
+                ApiClient.getJSON(ApiClient.getUrl('Anime4K/Status')).then(function (s) {
+                    var html = '<p>FFmpeg: <code>' + escapeHtml(s.FfmpegPath) + '</code> · Encoder: <code>' + escapeHtml(s.Encoder) + '</code>'
+                        + ' · Jellyfin-HW-Beschleunigung: <code>' + escapeHtml(s.JellyfinHardwareAcceleration) + '</code></p>';
+                    if (!s.Jobs.length) {
+                        html += '<p>Keine laufenden Anime4K-Streams.</p>';
+                    }
+                    s.Jobs.forEach(function (j) {
+                        html += '<p><b>' + escapeHtml(j.DeviceId) + '</b> – Modus ' + escapeHtml(j.Mode) + ' / ' + escapeHtml(j.Quality) + ' / ' + j.Height + 'p'
+                            + ' – Segmente ' + j.StartSegment + '…' + j.HighestSegment + ' (angefordert: ' + j.RequestedSegment + ')'
+                            + (j.Exited ? ' – beendet (Code ' + j.ExitCode + ')' : (j.Paused ? ' – pausiert (Puffer voll)' : ' – läuft')) + '</p>'
+                            + '<pre class="a4k-log">' + escapeHtml(j.CommandLine) + '\n\n' + escapeHtml(j.Log) + '</pre>';
+                    });
+                    out.innerHTML = html;
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

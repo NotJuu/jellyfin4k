@@ -1,0 +1,58 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - jellyfin: "12.4.0"
+            framework: "net10.0"
+            label: "jellyfin-12"
+          - jellyfin: "10.11.11"
+            framework: "net9.0"
+            label: "jellyfin-10.11"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            10.0.x
+
+      - name: Build
+        working-directory: Jellyfin.Plugin.Anime4K
+        run: |
+          dotnet restore -p:JellyfinVersion=${{ matrix.jellyfin }} -p:TargetFramework=${{ matrix.framework }}
+          dotnet build --no-restore -c Release -p:JellyfinVersion=${{ matrix.jellyfin }} -p:TargetFramework=${{ matrix.framework }} -o ../artifacts/${{ matrix.label }}
+
+      - name: Check client script syntax
+        run: node --check Jellyfin.Plugin.Anime4K/Web/anime4k.js
+
+      - name: Package
+        run: |
+          cd artifacts/${{ matrix.label }}
+          zip -j ../anime4k-${{ matrix.label }}.zip Jellyfin.Plugin.Anime4K.dll
+          md5sum ../anime4k-${{ matrix.label }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anime4k-${{ matrix.label }}
+          path: artifacts/anime4k-${{ matrix.label }}.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/anime4k-${{ matrix.label }}.zip

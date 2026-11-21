@@ -1,0 +1,17 @@
+---
+name: "Anime4K"
+guid: "2c1076de-f14e-4f3b-9f09-55168a31d9fe"
+version: "1.0.0.0"
+targetAbi: "12.0.0.0"
+framework: "net10.0"
+overview: "Anime4K-Upscaling im Player – im Browser oder auf dem Server für Fernseher"
+description: >
+  Echtzeit-Anime-Upscaling mit Anime4K. Im Webplayer per WebGL2 auf der GPU des Geräts,
+  oder auf dem Server mit FFmpeg/libplacebo, damit Fernseher fertig hochgerechnetes Video
+  (bis 4K) erhalten. Menü im Player, vollständig mit der TV-Fernbedienung bedienbar.
+category: "General"
+owner: "notjuu"
+artifacts:
+  - "Jellyfin.Plugin.Anime4K.dll"
+changelog: >
+  Erste Version.
