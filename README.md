@@ -1,109 +1,101 @@
-# jellyfin4k – Anime4K für Jellyfin
+# jellyfin4k – Anime4K for Jellyfin
 
-Ein Jellyfin-Plugin, das Animes mit [Anime4K](https://github.com/bloc97/Anime4K) in Echtzeit hochrechnet –
-mit eigenem Menü im Player, das sich vollständig mit der **Fernbedienung** bedienen lässt.
+A Jellyfin plugin that upscales anime in real time with [Anime4K](https://github.com/bloc97/Anime4K).
+It adds its own menu to the video player, and the menu works fully with a **TV remote**.
 
-Es gibt zwei Arten, Anime4K zu nutzen:
+You can use Anime4K in two ways:
 
-| | **Dieses Gerät (GPU)** | **Server (für TV)** |
+| | **This device (GPU)** | **Server (for TVs)** |
 |---|---|---|
-| Wo wird gerechnet? | Grafikkarte des Geräts, auf dem du schaust (WebGL2 im Browser) | Grafikkarte des **Jellyfin-Servers** (FFmpeg + libplacebo) |
-| Was kommt an? | Original-Video, wird lokal hochgerechnet | Fertig hochgerechnetes Video (1080p / 1440p / 4K) |
-| Ideal für | PC, Laptop, Desktop-App | Fernseher, Sticks, Handys – alles mit schwacher GPU |
-| Clients | Jellyfin-Webclient (Browser, LG webOS, Jellyfin Media Player) | **Alle** Jellyfin-Clients (auch Android TV, Samsung Tizen, …) |
+| Where it runs | The GPU of the device you are watching on (WebGL2 in the browser) | The GPU of the **Jellyfin server** (FFmpeg + libplacebo) |
+| What the client receives | The original video, upscaled locally | Video that is already upscaled (1080p / 1440p / 4K) |
+| Best for | PCs, laptops, the desktop app | TVs, streaming sticks, phones, any device with a weak GPU |
+| Clients | Jellyfin web client (browser, LG webOS, Jellyfin Media Player) | **Every** Jellyfin client (including Android TV and Samsung Tizen) |
 
-Mit dem Server-Modus rechnet also dein Computer (der Jellyfin-Server) Anime4K, und auf dem Fernseher
-siehst du trotzdem das hochgerechnete Bild.
+In server mode, your computer (the Jellyfin server) runs Anime4K and your TV shows the upscaled picture.
 
-## Funktionen
+## Features
 
-- **Anime4K v4.0.1** mit allen offiziellen Modi: A, B, C, A+A, B+B, C+A
-- Drei Qualitätsstufen: *Schnell* (M/S-Netze), *Hohe Qualität* (VL/M) und *Ultra* (UL/L)
-- **Button im Video-Player** (✨ `auto_awesome`) mit Einstellungsmenü
-- **Fernbedienung**: Steuerkreuz, OK und Zurück funktionieren im Menü, dazu Farbtasten
-- **Vergleichsansicht** (links Original, rechts Anime4K) und **Statistik** (Auflösung, Bilder/s, GPU-Zeit)
-- **Server-Upscaling pro Gerät** – direkt im Player einschaltbar oder im Dashboard für jedes Gerät
-- Untertitel bleiben sichtbar: Textuntertitel werden weiter vom Client dargestellt, Bilduntertitel (PGS/DVD)
-  werden beim Server-Upscaling scharf in die hochgerechnete Auflösung eingebrannt
-- Spulen, Fortsetzen, Audiospur-Wechsel und Fortschritt funktionieren wie gewohnt
+- **Anime4K v4.0.1** with all official modes: A, B, C, A+A, B+B, C+A
+- Three quality levels: *Fast* (M/S networks), *High quality* (VL/M) and *Ultra* (UL/L)
+- **Button in the video player** (✨ `auto_awesome`) that opens a settings menu
+- **TV remote support**: D-pad, OK and Back work in the menu, plus the colour buttons
+- **Comparison view** (original on the left, Anime4K on the right) and a **statistics overlay** (resolution, frames per second, GPU time)
+- **Server upscaling per device**: switch it on from the player or for any device in the dashboard
+- Subtitles stay visible. Text subtitles are still rendered by the client. In server mode, image subtitles (PGS/DVD) are burned in sharply at the upscaled resolution.
+- Seeking, resuming, switching audio tracks and progress reporting work as usual
 
-## Bedienung im Player
+## Using it in the player
 
-Während der Wiedergabe erscheint unten in der Steuerleiste der Anime4K-Button. Alternativ:
+During playback, the Anime4K button appears in the player's control bar. You can also use these keys:
 
-| Taste | Fernbedienung | Tastatur |
+| Action | Remote | Keyboard |
 |---|---|---|
-| Menü öffnen/schließen | 🔴 **Rot** | `Umschalt + A` |
-| Anime4K an/aus | 🟢 **Grün** | `Strg + 0` (aus) |
-| Nächster Modus | 🟡 **Gelb** | `Strg + 1` … `Strg + 6` (A, B, C, A+A, B+B, C+A) |
-| Vergleich an/aus | 🔵 **Blau** | – |
+| Open/close the menu | 🔴 **Red** | `Shift + A` |
+| Turn Anime4K on/off | 🟢 **Green** | `Ctrl + 0` (off) |
+| Next mode | 🟡 **Yellow** | `Ctrl + 1` … `Ctrl + 6` (A, B, C, A+A, B+B, C+A) |
+| Comparison on/off | 🔵 **Blue** | – |
 
-Im Menü: **▲ ▼** Eintrag wählen · **◀ ▶** Wert ändern · **OK** bestätigen · **Zurück** schließt.
+In the menu: **▲ ▼** select an entry · **◀ ▶** change the value · **OK** confirm · **Back** close.
 
-Menüeinträge:
+Menu entries:
 
-- **Anime4K** – *Aus*, *Dieses Gerät (GPU)* oder *Server (für TV)*
-- **Modus** – A (unscharfe Quellen, die meisten 1080p-Animes), B (leicht unscharf, mehr Artefakte),
-  C (scharfe Quellen), A+A, B+B, C+A
-- **Qualität** – Schnell / Hohe Qualität / Ultra
-- **Ausgabeauflösung** (nur Server) – 1080p, 1440p oder 2160p
-- **Vergleich**, **Statistik**
-- **Übernehmen & Wiedergabe neu starten** – erscheint, wenn sich Server-Einstellungen geändert haben.
-  Die Wiedergabe startet an derselben Stelle neu, jetzt mit dem Stream vom Server.
+- **Anime4K**: *Off*, *This device (GPU)* or *Server (for TV)*
+- **Mode**: A (blurry sources, most 1080p anime), B (slightly blurry, more compression artifacts), C (sharp sources), A+A, B+B, C+A
+- **Quality**: Fast / High quality / Ultra
+- **Output resolution** (server only): 1080p, 1440p or 2160p
+- **Comparison**, **Statistics**
+- **Apply & restart playback**: shown when server settings have changed. Playback restarts at the same position, now with the stream from the server.
 
-## Fernseher
+> The player menu is currently shown in German.
 
-- **LG webOS** und andere Geräte, die den Jellyfin-Webclient vom Server laden: Das Anime4K-Menü ist direkt im
-  Player verfügbar (rote Taste). Dort *Server (für TV)* wählen und übernehmen.
-- **Android TV, Fire TV, Samsung Tizen, Kodi, Infuse, …**: Diese Apps bringen einen eigenen Player mit.
-  Im Dashboard unter **Anime4K → Server-Upscaling pro Gerät** das Gerät auswählen, Modus/Auflösung einstellen,
-  speichern – ab der nächsten Wiedergabe kommt dort das hochgerechnete Video an.
+## TVs
 
-So funktioniert es technisch: Für aktivierte Geräte schreibt das Plugin die `PlaybackInfo`-Antwort des Servers
-so um, dass der Client einen HLS-Stream des Plugins abspielt. Dieser wird on demand von FFmpeg erzeugt
-(`libplacebo` mit den Anime4K-Shadern, danach Hardware- oder Software-Encoding). Springen startet die Kodierung an
-der neuen Stelle neu; ist FFmpeg weit genug voraus, wird es pausiert (Linux/macOS).
+- **LG webOS** and other devices that load the Jellyfin web client from the server get the Anime4K menu directly in the player (red button). Choose *Server (for TV)* and apply.
+- **Android TV, Fire TV, Samsung Tizen, Kodi, Infuse and similar apps** use their own player. In the dashboard, go to **Anime4K → Server upscaling per device**, select the device, set mode and resolution, and save. The next playback on that device is upscaled.
+
+How it works: for enabled devices, the plugin rewrites the server's `PlaybackInfo` response so the client plays an HLS stream from the plugin. FFmpeg creates that stream on demand: `libplacebo` runs the Anime4K shaders, then the video is encoded in hardware or software. Seeking restarts encoding at the new position. When FFmpeg is far enough ahead of playback, it is paused (Linux/macOS only).
 
 ## Installation
 
-### Über die Repository-URL (empfohlen, mit automatischen Updates)
+### Via repository URL (recommended, with automatic updates)
 
-1. Jellyfin-Dashboard → **Plugins** → **Repositories** (bzw. *Kataloge* → Zahnrad) → **+**
+1. Jellyfin dashboard → **Plugins** → **Repositories** (or *Catalog* → gear icon) → **+**
 2. Name: `Anime4K`, URL:
 
    ```
    https://github.com/NotJuu/jellyfin4k/releases/latest/download/manifest.json
    ```
 
-3. Speichern, dann unter **Katalog** das Plugin **Anime4K** auswählen und installieren.
-4. Jellyfin neu starten und im Browser die Jellyfin-Seite neu laden (Strg+F5).
+3. Save, then open the **Catalog**, select **Anime4K** and install it.
+4. Restart Jellyfin and reload the Jellyfin page in your browser (Ctrl+F5).
 
-Jellyfin wählt automatisch den passenden Build (Jellyfin 12.x oder 10.11).
+Jellyfin picks the right build automatically (Jellyfin 12.x or 10.11).
 
-### Manuell
+### Manual
 
-1. Die passende ZIP aus den [Releases](../../releases) herunterladen:
-   - `anime4k-jellyfin-12.zip` für Jellyfin 12.x
-   - `anime4k-jellyfin-10.11.zip` für Jellyfin 10.11
-2. Im Jellyfin-Datenverzeichnis einen Ordner `plugins/Anime4K` anlegen und `Jellyfin.Plugin.Anime4K.dll` hineinkopieren
-   (z. B. `/var/lib/jellyfin/plugins/Anime4K/`, Docker: `/config/plugins/Anime4K/`,
+1. Download the matching ZIP from the [releases](../../releases):
+   - `anime4k-jellyfin-12.zip` for Jellyfin 12.x
+   - `anime4k-jellyfin-10.11.zip` for Jellyfin 10.11
+2. In the Jellyfin data directory, create a folder `plugins/Anime4K` and copy `Jellyfin.Plugin.Anime4K.dll` into it
+   (for example `/var/lib/jellyfin/plugins/Anime4K/`, Docker: `/config/plugins/Anime4K/`,
    Windows: `%ProgramData%\Jellyfin\Server\plugins\Anime4K\`).
-3. Jellyfin neu starten und die Jellyfin-Seite im Browser neu laden.
+3. Restart Jellyfin and reload the Jellyfin page in your browser.
 
-### Neue Version veröffentlichen
+### Publishing a new version
 
-Einen Tag `vX.Y.Z` auf `main` pushen (oder auf GitHub ein Release mit diesem Tag anlegen). Der Workflow
-baut beide Varianten, erstellt das Release mit den ZIP-Dateien und der `manifest.json` – die Repository-URL
-oben zeigt danach automatisch auf die neue Version.
+Push a tag `vX.Y.Z` on `main`, or create a GitHub release with that tag. The workflow builds both variants and creates the release with the ZIP files and `manifest.json`. The repository URL above then points to the new version automatically.
 
-Selbst bauen (benötigt das .NET 10 SDK):
+### Building it yourself
+
+Requires the .NET 10 SDK:
 
 ```bash
 cd Jellyfin.Plugin.Anime4K
 dotnet build -c Release
 ```
 
-Für Jellyfin 10.11:
+For Jellyfin 10.11:
 
 ```bash
 cd Jellyfin.Plugin.Anime4K
@@ -111,57 +103,52 @@ dotnet restore -p:JellyfinVersion=10.11.11 -p:TargetFramework=net9.0
 dotnet build --no-restore -c Release -p:JellyfinVersion=10.11.11 -p:TargetFramework=net9.0
 ```
 
-## Voraussetzungen
+## Requirements
 
-### Browser-Modus (Dieses Gerät)
+### Browser mode (this device)
 
-- Browser mit **WebGL2** und `EXT_color_buffer_float` (alle aktuellen Chrome-, Edge-, Firefox- und Safari-Versionen)
-- Eine einigermaßen aktuelle GPU. Richtwerte für 1080p → 4K: *Schnell* läuft auf integrierten GPUs,
-  *Hohe Qualität* braucht eine Mittelklasse-Grafikkarte, *Ultra* eine High-End-Karte.
+- A browser with **WebGL2** and `EXT_color_buffer_float` (all current versions of Chrome, Edge, Firefox and Safari)
+- A reasonably modern GPU. Rough guide for 1080p → 4K: *Fast* runs on integrated GPUs, *High quality* needs a mid-range graphics card, *Ultra* needs a high-end card.
 
-### Server-Modus
+### Server mode
 
-- FFmpeg mit **libplacebo** und **Vulkan** – das mitgelieferte `jellyfin-ffmpeg` (ab Version 6) erfüllt das
-- Eine GPU im Server mit Vulkan-Treiber (NVIDIA, AMD, Intel)
-- Für 4K in Echtzeit unbedingt einen **Hardware-Encoder** verwenden (NVENC, Quick Sync, VAAPI, AMF, VideoToolbox).
-  Bei „Automatisch“ wird der Encoder aus den Jellyfin-Einstellungen zur Hardwarebeschleunigung übernommen.
+- FFmpeg with **libplacebo** and **Vulkan**. The bundled `jellyfin-ffmpeg` (version 6 or newer) has both.
+- A GPU in the server with a Vulkan driver (NVIDIA, AMD or Intel)
+- For 4K in real time, use a **hardware encoder** (NVENC, Quick Sync, VAAPI, AMF or VideoToolbox). With "Automatic", the plugin uses the encoder from Jellyfin's hardware acceleration settings.
 
-**Docker:** Der Container braucht Zugriff auf die GPU **und** den Vulkan-Treiber, z. B.
+**Docker:** the container needs access to the GPU **and** its Vulkan driver, for example:
 
-- NVIDIA: `--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all` (das `all` enthält `graphics`, das für Vulkan nötig ist)
+- NVIDIA: `--gpus all -e NVIDIA_DRIVER_CAPABILITIES=all` (`all` includes `graphics`, which Vulkan needs)
 - Intel/AMD: `--device /dev/dri:/dev/dri`
 
-Im Dashboard unter **Anime4K → Diagnose → Server-Upscaling testen** prüft das Plugin FFmpeg, libplacebo,
-Vulkan und den Encoder mit einem kurzen Testvideo. Meldet der Test *„Found no suitable device“*,
-im Feld **Vulkan-Gerät** `0` eintragen.
+In the dashboard, **Anime4K → Diagnostics → Test server upscaling** checks FFmpeg, libplacebo, Vulkan and the encoder with a short test video. If the test reports *"Found no suitable device"*, enter `0` in the **Vulkan device** field.
 
-## Einstellungen im Dashboard
+## Dashboard settings
 
 **Dashboard → Plugins → Anime4K**
 
-- Player-Integration und Server-Upscaling ein/aus, ob normale Benutzer Server-Upscaling selbst einschalten dürfen,
-  optional nur für Titel mit Genre „Anime“/„Animation“
-- Standardmodus, -qualität und -auflösung
-- Server-Upscaling pro Gerät (mit Modus, Qualität, Auflösung)
-- Encoder, Qualität (CRF/CQ/QP), maximale Bitrate, Preset, Segmentlänge, Audio, Vulkan-/VAAPI-Gerät,
-  maximale Anzahl gleichzeitiger Streams
-- Diagnose: Testlauf und Übersicht laufender Anime4K-Streams inkl. FFmpeg-Befehl und Log
+- Turn the player integration and server upscaling on or off, choose whether regular users may switch on server upscaling themselves, and optionally limit it to titles with the genre "Anime" or "Animation"
+- Default mode, quality and resolution
+- Server upscaling per device (with mode, quality and resolution)
+- Encoder, quality (CRF/CQ/QP), maximum bitrate, preset, segment length, audio, Vulkan/VAAPI device, maximum number of simultaneous streams
+- Diagnostics: a test run and a list of running Anime4K streams with the FFmpeg command and log
+
+> The dashboard page is currently in German.
 
 ## Tests
 
 ```bash
-# WebGL2-Implementierung gegen libplacebo (Referenz) für alle Modi und Qualitätsstufen
+# Compares the WebGL2 implementation with libplacebo (reference) for all modes and quality levels
 node tests/shader-parity.cjs
 
-# End-to-End gegen einen laufenden Jellyfin-Server mit installiertem Plugin
-JF_URL=http://localhost:8096 JF_USER=admin JF_PASS=admin JF_ITEM=<episoden-id> node tests/e2e-web.cjs
+# End-to-end test against a running Jellyfin server with the plugin installed
+JF_URL=http://localhost:8096 JF_USER=admin JF_PASS=admin JF_ITEM=<episode-id> node tests/e2e-web.cjs
 ```
 
-`shader-parity.cjs` vergleicht das Ergebnis der Browser-Implementierung mit dem von FFmpeg/libplacebo
-(PSNR, Grenzwert 35 dB; erreicht werden 54–57 dB, also praktisch identisch).
+`shader-parity.cjs` compares the output of the browser implementation with FFmpeg/libplacebo (PSNR, threshold 35 dB). The results are 54–57 dB, which is practically identical.
 
-## Lizenz
+## License
 
-Plugin: MIT, siehe [LICENSE](LICENSE).
-Anime4K-Shader: © 2019-2021 bloc97, MIT, siehe
+Plugin: MIT, see [LICENSE](LICENSE).
+Anime4K shaders: © 2019-2021 bloc97, MIT, see
 [Shaders/LICENSE-Anime4K.txt](Jellyfin.Plugin.Anime4K/Shaders/LICENSE-Anime4K.txt).
